@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/route_manager.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:x_french_travel/models/booking.dart';
 import 'package:x_french_travel/pages/homepage.dart';
 import 'package:x_french_travel/pages/my_bookings_cal_page.dart';
+import 'package:x_french_travel/providers/booking_provider.dart';
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({super.key});
@@ -11,6 +14,8 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
+  final BookingProvider provider = Get.find<BookingProvider>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +45,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             ),
             Expanded(
               child: ListView.builder(
+                itemCount: provider.bookedBookings.length,
                 itemBuilder: (context, index) {
+                  final Booking booking = provider.bookedBookings[index];
                   return SizedBox(
                     height: 200,
                     child: Card(
@@ -55,19 +62,28 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("first name, Last name \n hotel name"),
-                                Text("date to date"),
-                                Text("2 adults, 0 children, 1 room"),
+                                Text(
+                                  "${booking.firstName}, ${booking.lastName} \n ${booking.hotelName}",
+                                ),
+                                Text(
+                                  "${DateFormat("EEE, m d, y").format(booking.checkInDate)} to ${DateFormat("EEE, m d, y").format(booking.checkOutDate)}",
+                                ),
+                                Text(
+                                  "${booking.adults} adults, ${booking.adults} children, ${booking.rooms} room",
+                                ),
                                 Row(
                                   spacing: 12,
                                   children: [
-                                    Text("For sightseeing"),
-                                    Text("Pay with cash"),
+                                    if (booking.isForBusiness)
+                                      Text("For sightseeing"),
+                                    if (!booking.isForBusiness)
+                                      Text("For sight seeing"),
+                                    Text("Pay with ${booking.paymentMethod}"),
                                   ],
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [Text("€299")],
+                                  children: [Text("€${booking.price}")],
                                 ),
                               ],
                             ),

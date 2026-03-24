@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:x_french_travel/models/booking.dart';
 import 'package:x_french_travel/pages/my_bookings_page.dart';
+import 'package:x_french_travel/providers/booking_provider.dart';
 
 class BookingConfirmPage extends StatefulWidget {
   const BookingConfirmPage({super.key, this.hotel, this.room});
@@ -18,12 +21,19 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
   bool isForBusiness = false;
   String paymentMethod = "";
   int price = 0;
-  TextEditingController adultController = TextEditingController.fromValue(
+  int get rooms => (int.parse(adultController.value.text) / 2).toInt();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+
+  final TextEditingController adultController = TextEditingController.fromValue(
     TextEditingValue(text: "1"),
   );
-  TextEditingController childController = TextEditingController.fromValue(
+  final TextEditingController childController = TextEditingController.fromValue(
     TextEditingValue(text: "0"),
   );
+
+  final TextEditingController checkInDateController = TextEditingController();
+  final TextEditingController checkOutDateController = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +42,8 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
       price = widget.room["room_price_for_one_night"];
     });
   }
+
+  final BookingProvider provider = Get.find<BookingProvider>();
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +88,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                       children: [
                         Expanded(
                           child: TextFormField(
+                            controller: firstNameController,
                             key: Key("FirstName"),
                             decoration: InputDecoration(
                               label: Text("first Name"),
@@ -100,6 +113,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                         ),
                         Expanded(
                           child: TextFormField(
+                            controller: lastNameController,
                             key: Key("LastName"),
                             validator: (value) {
                               if (value == null) {
@@ -258,7 +272,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [Text("Room"), Text("1")],
+                            children: [Text("Room"), Text("$rooms")],
                           ),
                         ),
                       ],
@@ -387,6 +401,46 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                                           ElevatedButton(
                                             onPressed: () {
                                               Get.back();
+                                              provider.bookedBookings.add(
+                                                Booking(
+                                                  firstName: firstNameController
+                                                      .value
+                                                      .text,
+                                                  lastName: lastNameController
+                                                      .value
+                                                      .text,
+                                                  checkInDate:
+                                                      DateFormat(
+                                                        "y/M/d",
+                                                      ).tryParseLoose(
+                                                        checkInDateController
+                                                            .value
+                                                            .text,
+                                                      ) ??
+                                                      DateTime.now(),
+                                                  checkOutDate:
+                                                      DateFormat(
+                                                        "y/M/d",
+                                                      ).tryParseLoose(
+                                                        checkOutDateController
+                                                            .value
+                                                            .text,
+                                                      ) ??
+                                                      DateTime.now(),
+                                                  adults: int.parse(
+                                                    adultController.value.text,
+                                                  ),
+                                                  children: int.parse(
+                                                    childController.value.text,
+                                                  ),
+                                                  rooms: rooms,
+                                                  isForBusiness: isForBusiness,
+                                                  paymentMethod: paymentMethod,
+                                                  hotelName: widget
+                                                      .hotel["hotel_name"],
+                                                  price: price,
+                                                ),
+                                              );
                                               Get.to(() => MyBookingsPage());
                                             },
                                             child: Text("Yes"),

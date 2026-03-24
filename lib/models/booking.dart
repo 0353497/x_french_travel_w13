@@ -1,6 +1,7 @@
 class Booking {
   final String firstName;
   final String lastName;
+  final String hotelName;
   final DateTime checkInDate;
   final DateTime checkOutDate;
   final int adults;
@@ -8,6 +9,7 @@ class Booking {
   final int rooms;
   final bool isForBusiness;
   final String paymentMethod;
+  final int price;
 
   Booking({
     required this.firstName,
@@ -19,5 +21,7 @@ class Booking {
     required this.rooms,
     required this.isForBusiness,
     required this.paymentMethod,
+    required this.hotelName,
+    required this.price,
   });
 }
