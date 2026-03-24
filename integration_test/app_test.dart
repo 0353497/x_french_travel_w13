@@ -15,7 +15,7 @@ void main() {
       await tester.pumpAndSettle();
       print("Step No: $step, $description");
       step++;
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(Duration(seconds: 10));
     }
 
     await tester.pumpWidget(const MainApp());
