@@ -15,7 +15,7 @@ void main() {
       await tester.pumpAndSettle();
       print("Step No: $step, $description");
       step++;
-      await Future.delayed(Duration(seconds: 10));
+      await Future.delayed(Duration(milliseconds: 1));
     }
 
     await tester.pumpWidget(const MainApp());
@@ -96,5 +96,50 @@ void main() {
     await nextStep(
       'Click "Yes" in the pop-up window to confirm your reservation.',
     );
+
+    await tester.tap(find.byIcon(Icons.arrow_back_ios));
+    await nextStep("Click the back button to the Home page");
+
+    await tester.tap(find.byIcon(Icons.person_outline));
+    await nextStep("Click top right corner icon");
+
+    await tester.tap(find.byIcon(Icons.arrow_back_ios));
+    await nextStep("Click the back button to the Home page");
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await nextStep('Click the "Filter List" icon');
+
+    for (var i = 0; i < 9; i++) {
+      await tester.tap(find.byIcon(Icons.star).first);
+    }
+
+    await tester.drag(find.byType(Slider), const Offset(50, 0));
+    await nextStep(
+      "Select a Rating of 4.5 stars and a Dist of 6.9, then press the search key on the keyboard.",
+    );
+
+    await tester.tap(
+      find.text("Residence Pierre & Vacances Premium les Crets"),
+    );
+    await nextStep(
+      'Click the listing item "Residence Pierre & Vacances Premium les Crets',
+    );
+
+    await tester.tap(find.byKey(Key("RoomSelection")));
+    await tester.scrollUntilVisible(
+      find.text("Two-Bedroom Apartment - Open Mountain View"),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text("Two-Bedroom Apartment - Open Mountain View"));
+    await nextStep("""Click the Room selection
+label button
+&
+Scroll down the room list to
+the "Two-Bedroom
+Apartment - Open Mountain
+View" item
+&
+Click the item""");
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/extensions/export.dart';
 import 'package:get/route_manager.dart';
 import 'package:x_french_travel/pages/bookings_details_view.dart';
 import 'package:x_french_travel/pages/my_bookings_page.dart';
@@ -101,6 +102,7 @@ class _HomepageState extends State<Homepage> {
                         Text("Dist"),
                         Expanded(
                           child: SizedBox(
+                            width: 200,
                             child: Slider(
                               semanticFormatterCallback: (value) {
                                 return "$value".padRight(2, "0");
@@ -119,7 +121,7 @@ class _HomepageState extends State<Homepage> {
                             ),
                           ),
                         ),
-                        Text("${distance.roundToDouble()}".padRight(2, "0")),
+                        Text("${distance.toPrecision(1)}"),
                       ],
                     ),
                   ],

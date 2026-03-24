@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
+import 'package:x_french_travel/pages/homepage.dart';
 import 'package:x_french_travel/pages/my_bookings_cal_page.dart';
 
 class MyBookingsPage extends StatefulWidget {
@@ -15,7 +16,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => Get.back(),
+          onPressed: () => Get.to(() => Homepage()),
           icon: Icon(Icons.arrow_back_ios),
         ),
         title: Text("My Bookings"),
