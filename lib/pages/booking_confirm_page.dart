@@ -139,6 +139,12 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                               }
                               String testvalue = value.replaceAll("-", "/");
                               if (DateFormat(
+                                    "MMM d yy",
+                                  ).tryParseLoose(testvalue) !=
+                                  null) {
+                                return null;
+                              }
+                              if (DateFormat(
                                     "M/d/y",
                                   ).tryParseLoose(testvalue) ==
                                   null) {

@@ -126,20 +126,43 @@ void main() {
     );
 
     await tester.tap(find.byKey(Key("RoomSelection")));
+    await tester.pumpAndSettle();
+
     await tester.scrollUntilVisible(
       find.text("Two-Bedroom Apartment - Open Mountain View"),
       500,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.text("Two-Bedroom Apartment - Open Mountain View"));
-    await nextStep("""Click the Room selection
-label button
-&
-Scroll down the room list to
-the "Two-Bedroom
-Apartment - Open Mountain
-View" item
-&
-Click the item""");
+    await nextStep(
+      """Click the Room selection label button & Scroll down the room list to the "Two-Bedroom Apartment - Open Mountain View" item & Click the item""",
+    );
+    await tester.enterText(find.byKey(Key("FirstName")), "Taylor");
+
+    await tester.enterText(find.byKey(Key("LastName")), "Hutchinson");
+    await tester.enterText(find.byKey(Key("CheckInDate")), "Dec 21 25");
+
+    await tester.enterText(find.byKey(Key("CheckOutDate")), "23/12/25");
+
+    await tester.enterText(find.byKey(Key("Adults")), "4");
+
+    await tester.enterText(find.byKey(Key("Children")), "8");
+
+    await nextStep(
+      "Enter check-in date & Enter check-out date & Enter the number of adults & Enter the number of children",
+    );
+
+    await tester.tap(find.byKey(Key("ForBusiness")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Book now"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("Yes"));
+    await tester.pumpAndSettle();
+
+    await nextStep(
+      'Click For business with a meeting room radio button & Click the "Book now" button  & Click "Yes" in the pop-up window',
+    );
   });
 }
