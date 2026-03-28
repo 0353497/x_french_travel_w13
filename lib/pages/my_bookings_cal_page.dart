@@ -13,8 +13,11 @@ class MyBookingsCalPage extends StatefulWidget {
 
 class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
   final BookingProvider provider = Get.find<BookingProvider>();
-  DateTime visibleMonth = DateTime(2025, 9, 1);
-  DateTime? selectedDate;
+  DateTime visibleMonth = DateTime(
+    DateTime(2025, 10, 8).year,
+    DateTime(2025, 10, 8).month,
+    1,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +36,6 @@ class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
           children: [
             Row(
               children: [
-                Text(
-                  DateFormat("MMMM y").format(visibleMonth),
-                  key: Key("CalendarMonthLabel"),
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                Spacer(),
                 IconButton(
                   key: Key("CalendarPrevMonth"),
                   onPressed: () {
@@ -52,6 +49,14 @@ class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
                   },
                   icon: Icon(Icons.chevron_left),
                 ),
+                Spacer(),
+                Text(
+                  DateFormat("MMMM y").format(visibleMonth),
+                  key: Key("CalendarMonthLabel"),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Spacer(),
+
                 IconButton(
                   key: Key("CalendarNextMonth"),
                   onPressed: () {
@@ -88,30 +93,46 @@ class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
                     index + 1,
                   );
                   final bool hasBooking = _bookingsOnDate(day).isNotEmpty;
-                  final bool isSelected = _isSameDay(selectedDate, day);
+                  final bool isToday = _isSameDay(DateTime.now(), day);
 
                   return InkWell(
                     key: Key("CalendarDay_${day.day}"),
                     onTap: () {
-                      setState(() {
-                        selectedDate = day;
-                      });
+                      if (hasBooking) {
+                        provider.setStartDateFilter(day);
+                        Get.back();
+                      }
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.blue.shade200
+                        color: isToday
+                            ? Colors.blue.shade100
                             : hasBooking
                             ? Colors.orange.shade200
                             : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: hasBooking ? Colors.deepOrange : Colors.grey,
+                          color: isToday
+                              ? Colors.blue.shade700
+                              : hasBooking
+                              ? Colors.deepOrange
+                              : Colors.grey,
+                          width: isToday ? 2 : 1,
                         ),
                       ),
                       child: Center(
                         child: Text(
                           "${day.day}",
+                          style: TextStyle(
+                            color: isToday
+                                ? Colors.blue.shade900
+                                : hasBooking
+                                ? Colors.deepOrange.shade900
+                                : Colors.black87,
+                            fontWeight: isToday || hasBooking
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                          ),
                           key: Key(
                             hasBooking
                                 ? "HighlightedBookingDate_${day.month}_${day.day}"
@@ -124,13 +145,11 @@ class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
                 },
               ),
             ),
-            SizedBox(height: 16),
-            Text(
-              "Booking details",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
             SizedBox(height: 8),
-            ..._buildSelectedDateDetails(),
+            Text(
+              "Tap a highlighted booking date to filter My Bookings",
+              style: TextStyle(color: Colors.black54),
+            ),
           ],
         ),
       ),
@@ -146,34 +165,5 @@ class _MyBookingsCalPageState extends State<MyBookingsCalPage> {
   bool _isSameDay(DateTime? a, DateTime? b) {
     if (a == null || b == null) return false;
     return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  List<Widget> _buildSelectedDateDetails() {
-    if (selectedDate == null) {
-      return [Text("Select a date to view booking records")];
-    }
-
-    final List<Booking> selectedBookings = _bookingsOnDate(selectedDate!);
-    if (selectedBookings.isEmpty) {
-      return [
-        Text(
-          "No booking records for ${DateFormat("MMM d").format(selectedDate!)}",
-          key: Key("CalendarSelectedDateNoRecords"),
-        ),
-      ];
-    }
-
-    return selectedBookings.asMap().entries.map((entry) {
-      final int index = entry.key;
-      final Booking booking = entry.value;
-      return Text(
-        "${booking.hotelName} starting on ${DateFormat("MMMM d").format(booking.checkInDate)}",
-        key: Key(
-          index == 0
-              ? "CalendarBookingDetail_${booking.checkInDate.month}_${booking.checkInDate.day}"
-              : "CalendarBookingDetail_${booking.checkInDate.month}_${booking.checkInDate.day}_$index",
-        ),
-      );
-    }).toList();
   }
 }

@@ -25,7 +25,7 @@ class _HomepageState extends State<Homepage> {
   List filteredHotels = [];
   bool isOpenFilter = false;
   double filteredRating = 0;
-  double distance = 10;
+  double distance = 10.0;
   String searchTerm = "";
 
   @override
@@ -52,6 +52,7 @@ class _HomepageState extends State<Homepage> {
                     child: TextField(
                       key: Key("HotelSearch"),
                       controller: hotelController,
+                      textInputAction: TextInputAction.search,
                       onChanged: (value) {
                         searchTerm = value;
                         applyFilters();
@@ -68,8 +69,11 @@ class _HomepageState extends State<Homepage> {
                       setState(() {
                         isOpenFilter = !isOpenFilter;
                       });
+                      applyFilters();
                     },
-                    icon: Icon(Icons.menu),
+                    icon: Icon(
+                      isOpenFilter ? Icons.filter_list_off : Icons.filter_list,
+                    ),
                   ),
                 ],
               ),
@@ -99,13 +103,13 @@ class _HomepageState extends State<Homepage> {
                             child: Slider(
                               key: Key("DistanceSlider"),
                               semanticFormatterCallback: (value) {
-                                return "$value".padRight(2, "0");
+                                return value.toStringAsFixed(1);
                               },
                               max: 10,
                               showValueIndicator:
                                   ShowValueIndicator.alwaysVisible,
-                              min: 0,
-                              divisions: 100,
+                              min: 1,
+                              divisions: 90,
                               value: distance,
                               onChanged: (value) {
                                 setState(() {
@@ -156,12 +160,16 @@ class _HomepageState extends State<Homepage> {
                           ],
                         ),
                         Text(
-                          "${hotel["hotel_to_ski_distance"]} from Alp's ski lift",
+                          "${hotel["hotel_to_ski_distance"]} km from Alps' ski lift",
                         ),
                       ],
                     ),
                     trailing: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        if (_isBookableHotel(hotel["hotel_id"])) {
+                          Get.to(() => BookingsView(hotel: hotel));
+                        }
+                      },
                       child: Text("Book it"),
                     ),
                   );
@@ -206,8 +214,8 @@ class _HomepageState extends State<Homepage> {
       final bool matchesText =
           normalizedSearch.isEmpty || hotelName.contains(normalizedSearch);
       final bool matchesRating =
-          filteredRating == 0 || hotelRating >= minHotelRating;
-      final bool matchesDistance = hotelDistance <= distance;
+          !isOpenFilter || filteredRating == 0 || hotelRating >= minHotelRating;
+      final bool matchesDistance = !isOpenFilter || hotelDistance <= distance;
       return matchesText && matchesRating && matchesDistance;
     }).toList();
 
@@ -231,5 +239,9 @@ class _HomepageState extends State<Homepage> {
       return Icon(Icons.star_half, color: Colors.yellow);
     }
     return SizedBox();
+  }
+
+  bool _isBookableHotel(int hotelId) {
+    return hotelId == 1000 || hotelId == 1008;
   }
 }

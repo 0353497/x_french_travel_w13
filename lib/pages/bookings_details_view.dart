@@ -36,10 +36,34 @@ class _BookingsViewState extends State<BookingsView> {
           if (asyncSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
+          if (!asyncSnapshot.hasData) {
+            return Center(child: Text("No hotel details available"));
+          }
+
+          final dynamic details = asyncSnapshot.data;
+          final List<dynamic> ratings =
+              details["guest_reviews"]["ratings_categories"] as List<dynamic>;
+          final List<dynamic> reviews =
+              details["guest_reviews"]["reviews_objects"] as List<dynamic>;
+          final List<dynamic> rooms = details["rooms"] as List<dynamic>;
+
           return DefaultTabController(
             length: 2,
             child: Column(
               children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  color: Colors.blueGrey.shade50,
+                  child: Text(
+                    widget.hotel["hotel_name"],
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 TabBar(
                   tabs: [
                     Tab(key: Key("GuestReviews"), text: "Guest reviews"),
@@ -54,14 +78,6 @@ class _BookingsViewState extends State<BookingsView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              widget.hotel["hotel_name"],
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
                             Container(
                               width: double.maxFinite,
                               decoration: BoxDecoration(
@@ -75,19 +91,18 @@ class _BookingsViewState extends State<BookingsView> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Ratings"),
-                                    RatingsWidget(
-                                      entry: asyncSnapshot
-                                          .data["guest_reviews"]["ratings_categories"][1],
+                                    Text(
+                                      "Ratings",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
-                                    RatingsWidget(
-                                      entry: asyncSnapshot
-                                          .data["guest_reviews"]["ratings_categories"][0],
-                                    ),
-                                    RatingsWidget(
-                                      entry: asyncSnapshot
-                                          .data["guest_reviews"]["ratings_categories"][2],
-                                    ),
+                                    ...ratings.map((entry) {
+                                      return RatingsWidget(
+                                        entry: Map<String, dynamic>.from(entry),
+                                      );
+                                    }),
                                   ],
                                 ),
                               ),
@@ -96,18 +111,19 @@ class _BookingsViewState extends State<BookingsView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Reviews"),
+                                  Text(
+                                    "Reviews",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                   Expanded(
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      itemCount:
-                                          (asyncSnapshot
-                                                      .data["guest_reviews"]["reviews_objects"]
-                                                  as List)
-                                              .length,
+                                      itemCount: reviews.length,
                                       itemBuilder: (context, index) {
-                                        final review = asyncSnapshot
-                                            .data["guest_reviews"]["reviews_objects"][index];
+                                        final review = reviews[index];
                                         return SizedBox(
                                           width: 200,
                                           child: Card(
@@ -153,32 +169,25 @@ class _BookingsViewState extends State<BookingsView> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            height: 150,
-                            child: Center(
-                              child: Text(
-                                widget.hotel["hotel_name"],
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Rooms"),
+                                Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Text(
+                                    "Rooms",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
                                 Expanded(
                                   child: ListView.builder(
-                                    itemCount:
-                                        (asyncSnapshot.data["rooms"] as List)
-                                            .length,
+                                    itemCount: rooms.length,
                                     itemBuilder: (context, index) {
-                                      final room =
-                                          asyncSnapshot.data["rooms"][index];
+                                      final room = rooms[index];
                                       return ListTile(
                                         onTap: () => Get.to(
                                           () => BookingConfirmPage(
@@ -194,22 +203,26 @@ class _BookingsViewState extends State<BookingsView> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              "Bed: ${room["room_bed_type"]}, Total Number of guests ${room["room_total_number_of_guests"]}",
-                                              style: TextStyle(fontSize: 10),
+                                              "Bed: ${room["room_bed_type"]}",
                                             ),
-                                            Container(
-                                              color: Colors.white,
-                                              child: Text(
-                                                (room["room_features"]
-                                                        as List<dynamic>)
-                                                    .reduce((a, b) => "$a, $b,")
-                                                    .toString(),
-                                              ),
+                                            Text(
+                                              "Total number of guests: ${room["room_total_number_of_guests"]}",
+                                            ),
+                                            Text(
+                                              (room["room_features"]
+                                                      as List<dynamic>)
+                                                  .join(", "),
                                             ),
                                           ],
                                         ),
-                                        trailing: Text(
-                                          "€${room["room_price_for_one_night"]}",
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.euro, size: 18),
+                                            Text(
+                                              "${room["room_price_for_one_night"]}",
+                                            ),
+                                          ],
                                         ),
                                       );
                                     },
@@ -240,7 +253,7 @@ class _BookingsViewState extends State<BookingsView> {
 class RatingsWidget extends StatelessWidget {
   const RatingsWidget({super.key, required this.entry});
   final Map<String, dynamic> entry;
-  get value => entry.entries.first.value as double;
+  double get value => entry.entries.first.value as double;
   @override
   Widget build(BuildContext context) {
     return Column(

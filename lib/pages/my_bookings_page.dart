@@ -32,29 +32,47 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            if (provider.startDateFilter != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Filtered by start date: ${DateFormat("EEE, MMM d, y").format(provider.startDateFilter!)}",
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        provider.clearStartDateFilter();
+                        setState(() {});
+                      },
+                      child: Text("Clear"),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               children: [
                 Text("List of my bookings"),
+                Spacer(),
                 IconButton(
                   key: Key("SortByStartDate"),
                   onPressed: sortByStartDate,
-                  icon: Icon(Icons.calendar_month),
+                  icon: Icon(Icons.calendar_today),
                 ),
                 IconButton(
                   key: Key("SortByPrice"),
                   onPressed: sortByPrice,
-                  icon: Text(
-                    "\$",
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
-                  ),
+                  icon: Icon(Icons.attach_money),
                 ),
               ],
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: provider.bookedBookings.length,
+                itemCount: provider.visibleBookings.length,
                 itemBuilder: (context, index) {
-                  final Booking booking = provider.bookedBookings[index];
+                  final Booking booking = provider.visibleBookings[index];
                   return SizedBox(
                     key: Key("BookingCard_$index"),
                     height: 200,
@@ -74,7 +92,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                                   "${booking.firstName}, ${booking.lastName} \n ${booking.hotelName}",
                                 ),
                                 Text(
-                                  "${DateFormat("EEE, m d, y").format(booking.checkInDate)} to ${DateFormat("EEE, m d, y").format(booking.checkOutDate)}",
+                                  "${DateFormat("EEE, MMM d, y").format(booking.checkInDate)} to ${DateFormat("EEE, MMM d, y").format(booking.checkOutDate)}",
                                   key: Key("BookingDate_$index"),
                                 ),
                                 Text(
@@ -114,7 +132,12 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                 key: Key("MyBookingCAL"),
-                onPressed: () => Get.to(() => MyBookingsCalPage()),
+                onPressed: () async {
+                  await Get.to(() => MyBookingsCalPage());
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
                 child: SizedBox(
                   height: 60,
                   width: Get.width * .3,

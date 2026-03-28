@@ -20,7 +20,16 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
   bool isForBusiness = false;
   String paymentMethod = "";
   int price = 0;
-  int get rooms => (int.parse(adultController.value.text) / 2).toInt();
+  int get rooms {
+    final int adults = int.tryParse(adultController.text) ?? 1;
+    final int children = int.tryParse(childController.text) ?? 0;
+    final int totalGuests = adults + children;
+    final int roomCapacity =
+        (widget.room["room_total_number_of_guests"] as num?)?.toInt() ?? 2;
+    final int computed = (totalGuests / roomCapacity).ceil();
+    return computed < 1 ? 1 : computed;
+  }
+
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
 
@@ -37,9 +46,22 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      price = widget.room["room_price_for_one_night"];
-    });
+    adultController.addListener(_recalculatePrice);
+    childController.addListener(_recalculatePrice);
+    checkInDateController.addListener(_recalculatePrice);
+    checkOutDateController.addListener(_recalculatePrice);
+    _recalculatePrice();
+  }
+
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    adultController.dispose();
+    childController.dispose();
+    checkInDateController.dispose();
+    checkOutDateController.dispose();
+    super.dispose();
   }
 
   final BookingProvider provider = Get.find<BookingProvider>();
@@ -58,7 +80,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Text("You are going to reserve"),
+            Text("You are going to reserve:"),
             SizedBox(
               height: 100,
               child: Center(child: Text(widget.hotel["hotel_name"])),
@@ -90,7 +112,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                             controller: firstNameController,
                             key: Key("FirstName"),
                             decoration: InputDecoration(
-                              label: Text("first Name"),
+                              label: Text("First Name"),
                               hint: Text("First Name"),
                             ),
                             validator: (value) {
@@ -247,7 +269,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                             ],
                             decoration: InputDecoration(
                               label: Text("Children"),
-                              hint: Text("Childern"),
+                              hint: Text("Children"),
                             ),
                             validator: (value) {
                               if (value == null) return null;
@@ -289,14 +311,10 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                           groupValue: isForBusiness,
                           onChanged: (value) {
                             if (value == null) return;
-                            if (value) {
-                              price += 150;
-                            } else {
-                              price -= 150;
-                            }
                             setState(() {
                               isForBusiness = value;
                             });
+                            _recalculatePrice();
                           },
                           child: Row(
                             children: [
@@ -334,7 +352,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                           flex: 4,
                           child: Column(
                             children: [
-                              Text("Wich way to pay?"),
+                              Text("Which way to pay?"),
                               Row(
                                 children: [
                                   RadioGroup<String>(
@@ -347,7 +365,11 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                                     },
                                     child: Row(
                                       children: [
-                                        Radio(value: "Cash", enabled: false),
+                                        Radio(
+                                          key: Key("Cash"),
+                                          value: "Cash",
+                                          enabled: false,
+                                        ),
                                         Text("Cash"),
                                         Radio(
                                           key: Key("CreditCard"),
@@ -406,7 +428,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                                           ElevatedButton(
                                             onPressed: () {
                                               Get.back();
-                                              provider.bookedBookings.add(
+                                              provider.addBooking(
                                                 Booking(
                                                   firstName: firstNameController
                                                       .value
@@ -431,9 +453,13 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                                                   adults: int.parse(
                                                     adultController.value.text,
                                                   ),
-                                                  children: int.parse(
-                                                    childController.value.text,
-                                                  ),
+                                                  children:
+                                                      int.tryParse(
+                                                        childController
+                                                            .value
+                                                            .text,
+                                                      ) ??
+                                                      0,
                                                   rooms: rooms,
                                                   isForBusiness: isForBusiness,
                                                   paymentMethod: paymentMethod,
@@ -492,5 +518,29 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
       if (parsed != null) return parsed;
     }
     return null;
+  }
+
+  int _nightsCount() {
+    final DateTime? checkIn = _parseBookingDate(checkInDateController.text);
+    final DateTime? checkOut = _parseBookingDate(checkOutDateController.text);
+    if (checkIn == null || checkOut == null) {
+      return 1;
+    }
+
+    final int nights = checkOut.difference(checkIn).inDays;
+    return nights < 1 ? 1 : nights;
+  }
+
+  void _recalculatePrice() {
+    final int roomPrice =
+        (widget.room["room_price_for_one_night"] as num?)?.toInt() ?? 0;
+    final int basePrice = roomPrice * _nightsCount() * rooms;
+    final int totalPrice = basePrice + (isForBusiness ? 150 : 0);
+
+    if (mounted) {
+      setState(() {
+        price = totalPrice;
+      });
+    }
   }
 }

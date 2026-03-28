@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get_utils/get_utils.dart';
-import 'package:get/get_utils/src/extensions/num_extensions.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:x_french_travel/main.dart';
 

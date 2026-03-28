@@ -43,4 +43,33 @@ class BookingProvider extends GetxController {
       price: 900,
     ),
   ];
+
+  DateTime? startDateFilter;
+
+  List<Booking> get visibleBookings {
+    if (startDateFilter == null) {
+      return bookedBookings;
+    }
+
+    return bookedBookings.where((booking) {
+      return booking.checkInDate.year == startDateFilter!.year &&
+          booking.checkInDate.month == startDateFilter!.month &&
+          booking.checkInDate.day == startDateFilter!.day;
+    }).toList();
+  }
+
+  void setStartDateFilter(DateTime date) {
+    startDateFilter = DateTime(date.year, date.month, date.day);
+    update();
+  }
+
+  void clearStartDateFilter() {
+    startDateFilter = null;
+    update();
+  }
+
+  void addBooking(Booking booking) {
+    bookedBookings.add(booking);
+    update();
+  }
 }
