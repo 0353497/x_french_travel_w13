@@ -26,6 +26,7 @@ class _HomepageState extends State<Homepage> {
   bool isOpenFilter = false;
   double filteredRating = 0;
   double distance = 10;
+  String searchTerm = "";
 
   @override
   Widget build(BuildContext context) {
@@ -49,29 +50,20 @@ class _HomepageState extends State<Homepage> {
                 children: [
                   Expanded(
                     child: TextField(
+                      key: Key("HotelSearch"),
                       controller: hotelController,
                       onChanged: (value) {
-                        if (value.isEmpty) {
-                          setState(() {
-                            filteredHotels = completeHotels;
-                          });
-                        }
-                        setState(() {
-                          filteredHotels = completeHotels
-                              .where(
-                                (hotel) => hotel["hotel_name"]
-                                    .toString()
-                                    .contains(value),
-                              )
-                              .toList();
-                        });
+                        searchTerm = value;
+                        applyFilters();
                       },
+                      onSubmitted: (_) => applyFilters(),
                       decoration: InputDecoration(
                         hint: Text("Search a hotel name"),
                       ),
                     ),
                   ),
                   IconButton(
+                    key: Key("FilterList"),
                     onPressed: () {
                       setState(() {
                         isOpenFilter = !isOpenFilter;
@@ -92,7 +84,8 @@ class _HomepageState extends State<Homepage> {
                         Text("Rating"),
                         for (int i = 0; i < 5; i++)
                           IconButton(
-                            onPressed: () => addStarValue(),
+                            key: Key("FilterStar$i"),
+                            onPressed: addStarValue,
                             icon: getStar(i),
                           ),
                       ],
@@ -104,6 +97,7 @@ class _HomepageState extends State<Homepage> {
                           child: SizedBox(
                             width: 200,
                             child: Slider(
+                              key: Key("DistanceSlider"),
                               semanticFormatterCallback: (value) {
                                 return "$value".padRight(2, "0");
                               },
@@ -117,6 +111,7 @@ class _HomepageState extends State<Homepage> {
                                 setState(() {
                                   distance = value;
                                 });
+                                applyFilters();
                               },
                             ),
                           ),
@@ -181,19 +176,43 @@ class _HomepageState extends State<Homepage> {
 
   void init() async {
     completeHotels = await JsonReader.readHotels();
-    filteredHotels = completeHotels;
-    setState(() {});
+    applyFilters();
   }
 
   void addStarValue() {
-    if (filteredRating > 5) {
+    if (filteredRating >= 5) {
       setState(() {
         filteredRating = 0;
       });
+      applyFilters();
       return;
     }
     setState(() {
       filteredRating += .5;
+    });
+    applyFilters();
+  }
+
+  void applyFilters() {
+    final String normalizedSearch = searchTerm.trim().toLowerCase();
+    final double minHotelRating = filteredRating * 2;
+
+    final List<dynamic> nextHotels = completeHotels.where((hotel) {
+      final String hotelName = hotel["hotel_name"].toString().toLowerCase();
+      final double hotelRating = (hotel["hotel_rating"] as num).toDouble();
+      final double hotelDistance = (hotel["hotel_to_ski_distance"] as num)
+          .toDouble();
+
+      final bool matchesText =
+          normalizedSearch.isEmpty || hotelName.contains(normalizedSearch);
+      final bool matchesRating =
+          filteredRating == 0 || hotelRating >= minHotelRating;
+      final bool matchesDistance = hotelDistance <= distance;
+      return matchesText && matchesRating && matchesDistance;
+    }).toList();
+
+    setState(() {
+      filteredHotels = nextHotels;
     });
   }
 

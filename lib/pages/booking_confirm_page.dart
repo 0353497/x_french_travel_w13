@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:x_french_travel/models/booking.dart';
 import 'package:x_french_travel/pages/my_bookings_page.dart';
@@ -144,6 +143,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                         Expanded(
                           child: TextFormField(
                             key: Key("CheckInDate"),
+                            controller: checkInDateController,
                             validator: (value) {
                               if (value == null) {
                                 return "value can not be empty";
@@ -176,6 +176,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                         Expanded(
                           child: TextFormField(
                             key: Key("CheckOutDate"),
+                            controller: checkOutDateController,
                             validator: (value) {
                               if (value == null) {
                                 return "value can not be empty";
@@ -272,7 +273,10 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [Text("Room"), Text("$rooms")],
+                            children: [
+                              Text("Room"),
+                              Text("$rooms", key: Key("RoomsCountValue")),
+                            ],
                           ),
                         ),
                       ],
@@ -379,6 +383,7 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                       height: 60,
                       width: double.maxFinite,
                       child: ElevatedButton(
+                        key: Key("BookNow"),
                         onPressed: () {
                           if (formkey.currentState?.validate() ?? false) {
                             Get.dialog(
@@ -410,18 +415,14 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
                                                       .value
                                                       .text,
                                                   checkInDate:
-                                                      DateFormat(
-                                                        "y/M/d",
-                                                      ).tryParseLoose(
+                                                      _parseBookingDate(
                                                         checkInDateController
                                                             .value
                                                             .text,
                                                       ) ??
                                                       DateTime.now(),
                                                   checkOutDate:
-                                                      DateFormat(
-                                                        "y/M/d",
-                                                      ).tryParseLoose(
+                                                      _parseBookingDate(
                                                         checkOutDateController
                                                             .value
                                                             .text,
@@ -473,5 +474,23 @@ class _BookingConfirmPageState extends State<BookingConfirmPage> {
         ),
       ),
     );
+  }
+
+  DateTime? _parseBookingDate(String rawValue) {
+    final String value = rawValue.trim().replaceAll("-", "/");
+    if (value.isEmpty) return null;
+
+    final List<DateFormat> formats = <DateFormat>[
+      DateFormat("y/M/d"),
+      DateFormat("M/d/y"),
+      DateFormat("d/M/yy"),
+      DateFormat("MMM d yy"),
+    ];
+
+    for (final DateFormat format in formats) {
+      final DateTime? parsed = format.tryParseLoose(value);
+      if (parsed != null) return parsed;
+    }
+    return null;
   }
 }

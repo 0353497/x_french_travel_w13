@@ -15,6 +15,8 @@ class MyBookingsPage extends StatefulWidget {
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
   final BookingProvider provider = Get.find<BookingProvider>();
+  bool isStartDateDescending = true;
+  bool isPriceDescending = true;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +35,14 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             Row(
               children: [
                 Text("List of my bookings"),
-                IconButton(onPressed: () {}, icon: Icon(Icons.calendar_month)),
                 IconButton(
-                  onPressed: () {},
+                  key: Key("SortByStartDate"),
+                  onPressed: sortByStartDate,
+                  icon: Icon(Icons.calendar_month),
+                ),
+                IconButton(
+                  key: Key("SortByPrice"),
+                  onPressed: sortByPrice,
                   icon: Text(
                     "\$",
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
@@ -49,6 +56,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 itemBuilder: (context, index) {
                   final Booking booking = provider.bookedBookings[index];
                   return SizedBox(
+                    key: Key("BookingCard_$index"),
                     height: 200,
                     child: Card(
                       child: Row(
@@ -67,23 +75,30 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                                 ),
                                 Text(
                                   "${DateFormat("EEE, m d, y").format(booking.checkInDate)} to ${DateFormat("EEE, m d, y").format(booking.checkOutDate)}",
+                                  key: Key("BookingDate_$index"),
                                 ),
                                 Text(
-                                  "${booking.adults} adults, ${booking.adults} children, ${booking.rooms} room",
+                                  "${booking.adults} adults, ${booking.children} children, ${booking.rooms} room",
+                                  key: Key("BookingGuests_$index"),
                                 ),
                                 Row(
                                   spacing: 12,
                                   children: [
                                     if (booking.isForBusiness)
-                                      Text("For sightseeing"),
+                                      Text("For business with a meeting room"),
                                     if (!booking.isForBusiness)
-                                      Text("For sight seeing"),
+                                      Text("For sightseeing"),
                                     Text("Pay with ${booking.paymentMethod}"),
                                   ],
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [Text("€${booking.price}")],
+                                  children: [
+                                    Text(
+                                      "€${booking.price}",
+                                      key: Key("BookingPrice_$index"),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -98,11 +113,12 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
+                key: Key("MyBookingCAL"),
                 onPressed: () => Get.to(() => MyBookingsCalPage()),
                 child: SizedBox(
                   height: 60,
                   width: Get.width * .3,
-                  child: Center(child: Text("MY Booking CAL")),
+                  child: Center(child: Text("My Booking CAL")),
                 ),
               ),
             ),
@@ -110,5 +126,27 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         ),
       ),
     );
+  }
+
+  void sortByStartDate() {
+    provider.bookedBookings.sort((a, b) {
+      return isStartDateDescending
+          ? b.checkInDate.compareTo(a.checkInDate)
+          : a.checkInDate.compareTo(b.checkInDate);
+    });
+    setState(() {
+      isStartDateDescending = !isStartDateDescending;
+    });
+  }
+
+  void sortByPrice() {
+    provider.bookedBookings.sort((a, b) {
+      return isPriceDescending
+          ? b.price.compareTo(a.price)
+          : a.price.compareTo(b.price);
+    });
+    setState(() {
+      isPriceDescending = !isPriceDescending;
+    });
   }
 }
